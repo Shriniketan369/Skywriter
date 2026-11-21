@@ -2,7 +2,7 @@
 
 <p align="center">
   Draw in the air with your hand.<br>
-  Your webcam tracks your hand, and simple gestures control the drawing.
+  Your webcam tracks your fingertip, and three simple gestures control the pen.
 </p>
 
 <!-- Add a 5 to 10 second GIF of you drawing, then remove this line and the closing arrow below:
@@ -11,29 +11,40 @@
 </p>
 -->
 
+> **Status:** early prototype (step 1 of 4). Drawing, pausing and erasing work. Adaptive ink and virtual camera output are planned.
+
 ## What it does
 
-Skywriter turns your webcam into a canvas. It finds your hand in each video frame, follows your fingertip, and draws wherever you point. Gestures decide what the app does, such as drawing or stopping.
+Skywriter turns your webcam into a canvas. It follows your index fingertip and draws smooth strokes on top of the live video. You switch between drawing, pausing and erasing by changing how many fingers you hold up.
 
 It runs on your own computer.
+
+## Gestures
+
+| Gesture | Action |
+| --- | --- |
+| Index finger only | **Draw** |
+| Index and middle fingers | **Pause** (move without drawing) |
+| Open palm (four fingers up) | **Erase** (wipes a circle around your palm) |
+
+| Key | Action |
+| --- | --- |
+| `q` | Quit |
+| `c` | Clear everything |
+
+Keep your hand upright. The gesture rules assume your fingers point up.
 
 ## How it works
 
 1. **Capture:** OpenCV reads frames from your webcam.
-2. **Track:** MediaPipe finds 21 landmarks on your hand in each frame.
-3. **Decide:** simple rules on those landmarks (for example, which fingers are up) pick the gesture.
-4. **Draw:** the app draws on a canvas and shows it over the live video.
+2. **Track:** MediaPipe Hands finds 21 landmarks on your hand.
+3. **Decide:** simple rules compare each fingertip with the joint below it to see which fingers are up. That picks the gesture. There is no trained gesture model, so the rules are easy to read and change.
+4. **Smooth:** an exponential moving average removes jitter from the fingertip position, so lines look clean.
+5. **Draw:** strokes go on a separate canvas and are placed over the video.
 
-The gestures come from plain rules, not a trained model, so you can read and change them in the code.
+### Mirror-safe output
 
-## Gestures
-
-<!-- Fill this in with your real gestures: -->
-
-| Gesture | Action |
-| --- | --- |
-| *(your gesture)* | *(what it does)* |
-| *(your gesture)* | *(what it does)* |
+The preview you see is mirrored, so it feels like a mirror. The frame that a future virtual camera would send is **not** mirrored, and strokes are added to it **before** any flip. That way, writing looks correct to the people on the other end.
 
 ## Getting started
 
@@ -46,19 +57,30 @@ pip install -r requirements.txt
 python skywriter.py
 ```
 
-Use a well-lit room and keep your hand clear of the edges of the frame.
+Use a well-lit room and keep your hand inside the frame.
+
+## Settings
+
+At the top of `skywriter.py`:
+
+| Setting | What it changes |
+| --- | --- |
+| `PEN_COLOR` | Ink color, in BGR (default yellow) |
+| `PEN_SIZE` | Line thickness |
+| `ERASER_SIZE` | Size of the erase circle |
+| `SMOOTHING` | `0` is no smoothing. Values closer to `1` are smoother but lag more |
+
+## Roadmap
+
+- [x] Step 1: fingertip tracking, smooth strokes, draw / pause / erase
+- [ ] Step 3: adaptive ink color
+- [ ] Step 4: send the output to a virtual camera, so you can draw in video calls
 
 ## Built with
 
 - [OpenCV](https://opencv.org) for video capture and drawing
 - [MediaPipe](https://developers.google.com/mediapipe) for hand tracking
 - [NumPy](https://numpy.org) for the canvas
-
-## Ideas for next
-
-- Tune the gestures so they work in more lighting
-- Add colors and an eraser
-- Save the drawing as an image
 
 ## License
 
